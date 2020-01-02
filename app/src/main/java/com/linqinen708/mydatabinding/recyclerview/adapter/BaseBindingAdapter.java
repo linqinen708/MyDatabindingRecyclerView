@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 /**
- * Created by Ian on 2019/10/16.
+ * Created by Ian on 2019/12/26.
  */
 
 public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends RecyclerView.Adapter {
@@ -28,22 +28,11 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
     protected ObservableArrayList<M> items;
     private ListChangedCallback itemsChangeCallback;
 
-    private boolean isShowFootView = false;
+    private boolean isShowFooterView = false;
     /**
      * 是否正在 加载更多
      */
     private boolean isLoadingMore = false;
-    /**
-     * 是否可以加载更多
-     */
-    private boolean loadMoreEnable = true;
-
-    /**
-     * 是否支持加载更多
-     */
-    public void setLoadMoreEnable(boolean loadMoreEnable) {
-        this.loadMoreEnable = loadMoreEnable;
-    }
 
     /**
      * 判断viewType 是不是FooterView
@@ -54,26 +43,18 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
      */
     protected static final int TYPE_HEADER_VIEW = 2;
 
-
-    /**
-     * 清除所有数据之后，要把footview 也关闭掉
-     * 回到最初始状态
-     */
-    public void clearData() {
-        items.clear();
-//        isShowFootView = false;
-    }
-
     /**
      * 改变底部footView状态
-     * @param showFootView false 表示不展示 暂无更多数据 和 正在加载。。。
+     *
+     * @param showFooterView false 表示不展示 暂无更多数据 和 正在加载。。。
      */
-    public void showFootView(boolean showFootView) {
-        if (isShowFootView == showFootView) {
-            LogT.i("未改变状态直接返回showFootView："+showFootView);
+    public void showFooterView(boolean showFooterView) {
+        if (isShowFooterView == showFooterView) {
+            LogT.i("未改变状态直接返回showFootView：" + showFooterView);
             return;
         }
-        isShowFootView = showFootView;
+        isShowFooterView = showFooterView;
+        notifyItemChanged(getItemCount() - 1);
     }
 
     /**
@@ -82,52 +63,46 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
      *                      true 正在加载...
      */
     public void showLoadMore(boolean isLoadingMore) {
-//        LogT.i("isLoadingMore:" + isLoadingMore);
+        LogT.i("isLoadingMore:" + isLoadingMore);
         if (this.isLoadingMore == isLoadingMore) {
-            LogT.i("未改变状态直接返回isLoadingMore："+isLoadingMore);
+            LogT.i("未改变状态直接返回isLoadingMore：" + isLoadingMore);
             return;
         }
-        isShowFootView = true;
+        isShowFooterView = true;
         this.isLoadingMore = isLoadingMore;
-        if (loadMoreEnable) {
-            notifyItemChanged(getItemCount() - 1);
-        }else{
-            LogT.i("未启动加载更多功能");
+        notifyItemChanged(getItemCount() - 1);
+
+    }
+
+    public boolean toggleLoadMore(Collection<? extends M> collection) {
+        if (collection != null) {
+            if (collection.isEmpty()) {
+                showLoadMore(false);
+                return false;
+            } else {
+                showLoadMore(true);
+                items.addAll(collection);
+                return true;
+            }
+        } else {
+            showLoadMore(true);
+            return true;
         }
     }
 
     /**
      * 根据数据自动显示 footView（暂无更多数据）
      */
-    public void toggleLoadMore(Collection<? extends M> collection) {
+    public void toggleFootView(Collection<? extends M> collection) {
         if (collection != null) {
             if (collection.isEmpty()) {
-                showLoadMore(false);
+                showFooterView(true);
             } else {
-                showLoadMore(true);
+                showFooterView(false);
                 items.addAll(collection);
             }
         } else {
-            showLoadMore(true);
-        }
-    }
-
-    public void toggleLoadMore(Collection<? extends M> collection, boolean isRefreshHeaderView) {
-        if (isRefreshHeaderView) {
-            refreshHeaderViewData();
-        }
-        toggleLoadMore(collection);
-    }
-
-    /**
-     * 当items 没有数据的时候，如果需要动态设置HeaderView的数据
-     * 需要刷新，否则数据无法展示出来
-     */
-    public void refreshHeaderViewData() {
-        if (getHeaderViewLayoutResId() != 0 && items.isEmpty()) {
-            LogT.i("刷新头部:");
-            notifyItemChanged(0);//这样刷新头部居然没有效果
-//            notifyDataSetChanged();
+            showFooterView(true);
         }
     }
 
@@ -147,8 +122,8 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
         }
     }
 
-    public static class FootViewHolder extends RecyclerView.ViewHolder {
-        public FootViewHolder(View itemView) {
+    public static class FooterViewHolder extends RecyclerView.ViewHolder {
+        public FooterViewHolder(View itemView) {
             super(itemView);
         }
     }
@@ -183,9 +158,9 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
                 position--;
             }
         }
-        if (isShowFootView) {
+        if (isShowFooterView) {
             if (position == items.size()) {
-                return R.layout.adapter_foot_view;
+                return R.layout.adapter_default_footer_view;
             } else {
                 position--;
             }
@@ -217,7 +192,7 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
             count++;
         }
         /*如果有FooterView,数量+1*/
-        if (isShowFootView) {
+        if (isShowFooterView) {
             return ++count;
         } else {
             return count;
@@ -237,7 +212,7 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
         }
 
 //        LogT.i("getItemViewType:"+position );
-        if (isShowFootView) {
+        if (isShowFooterView) {
             if (position == items.size()) {
                 return TYPE_FOOTER_VIEW;
             }
@@ -253,8 +228,8 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
 //        LogT.i("viewType:" + viewType + ",getHeaderViewLayoutResId():" + getHeaderViewLayoutResId());
         if (viewType == TYPE_FOOTER_VIEW) {
 //            LogT.i("加载footview");
-            return new FootViewHolder(LayoutInflater.from(mContext).inflate(
-                    getFootViewLayoutResId() == 0 ? R.layout.adapter_foot_view : getFootViewLayoutResId(),
+            return new FooterViewHolder(LayoutInflater.from(mContext).inflate(
+                    getFooterViewLayoutResId() == 0 ? R.layout.adapter_default_footer_view : getFooterViewLayoutResId(),
                     parent, false));
         } else if (viewType == TYPE_HEADER_VIEW) {
             if (getHeaderViewLayoutResId() != 0) {
@@ -263,7 +238,7 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
             }
             return new HeaderViewHolder(LayoutInflater.from(mContext).inflate(getHeaderViewLayoutResId(), parent, false));
         } else {
-            B binding = DataBindingUtil.inflate(LayoutInflater.from(this.mContext), this.getLayoutResId(viewType), parent, false);
+            B binding = DataBindingUtil.inflate(LayoutInflater.from(this.mContext), getLayoutResId(), parent, false);
             return new BaseBindingViewHolder(binding.getRoot());
         }
     }
@@ -291,7 +266,7 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
                 }
                 this.onBindItem(binding, bean, position);
 //                this.onBindItem(binding, this.items.get(position));
-            } else if (holder instanceof FootViewHolder) {
+            } else if (holder instanceof FooterViewHolder) {
                 TextView tvFootView = holder.itemView.findViewById(R.id.tv_foot_view);
                 if (isLoadingMore) {
                     tvFootView.setText("正在加载...");
@@ -324,7 +299,7 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
 
     //endregion
     @LayoutRes
-    protected abstract int getLayoutResId(int viewType);
+    protected abstract int getLayoutResId();
 
     /**
      * 使用HeaderView，默认为0，表示没有，如果有，则重写该方法，返回R.layout.xxx
@@ -338,7 +313,7 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
      * 使用FootView，默认为0，表示没有，如果有，则重写该方法，返回R.layout.xxx
      */
     @LayoutRes
-    protected int getFootViewLayoutResId() {
+    protected int getFooterViewLayoutResId() {
         return 0;
     }
 
@@ -348,7 +323,7 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
     /**
      * 额外监听数据变化，这样就可以直接更新数据，
      * 而不用每次都调用notifyDataSetChanged()等方式更新数据
-     *
+     * <p>
      * 我只对插入和移除做了监听处理，其他方式没有处理
      * 小伙伴可以根据自己的具体需要做额外处理
      */
@@ -366,12 +341,13 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
 
         @Override
         public void onItemRangeInserted(ObservableArrayList<M> newItems, int positionStart, int itemCount) {
-            LogT.i("onItemRangeInserted:" + positionStart + "--" + itemCount + "," + newItems.toString());
-            /*当有头部信息的时候，由于整体position便宜了，所以需要往后挪一位*/
-            if(getHeaderViewLayoutResId() !=0){
+//            LogT.i("onItemRangeInserted:" + positionStart + "--" + itemCount + "," + newItems.toString());
+            /*当有头部信息的时候，由于整体position偏移了，所以需要往后挪一位*/
+            if (getHeaderViewLayoutResId() != 0) {
                 positionStart++;
             }
             notifyItemRangeInserted(positionStart, itemCount);
+
         }
 
         @Override
@@ -382,10 +358,13 @@ public abstract class BaseBindingAdapter<M, B extends ViewDataBinding> extends R
         @Override
         public void onItemRangeRemoved(ObservableArrayList<M> newItems, int positionStart, int itemCount) {
             LogT.i("onItemRangeRemoved:" + positionStart + "--" + itemCount + "," + newItems.toString());
-            /*当有头部信息的时候，由于整体position便宜了，所以需要往后挪一位*/
-            if(getHeaderViewLayoutResId() !=0){
+//            if (itemCount > 1) {
+//
+//                /*当有头部信息的时候，由于整体position偏移了，所以需要往后挪一位*/
+            if (getHeaderViewLayoutResId() != 0) {
                 positionStart++;
             }
+
             notifyItemRangeRemoved(positionStart, itemCount);
         }
     }

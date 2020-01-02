@@ -20,10 +20,25 @@ public class LoadMoreRecyclerView extends RecyclerView {
 
     private int lastVisibleItemPosition;
 
-    private int lastY;
 
     /**
-     * 是否正在上拉加载更多
+     * 是否可以上拉加载更多
+     * 比如当暂无更多数据之后，就没必要再支持上拉加载更多了
+     * 可以关闭上拉功能
+     */
+    private boolean isLoadMoreEnable = true;
+
+    public boolean isLoadMoreEnable() {
+        return isLoadMoreEnable;
+    }
+
+    public void setLoadMoreEnable(boolean loadMoreEnable) {
+        isLoadMoreEnable = loadMoreEnable;
+    }
+
+    /**
+     * 是否正在上拉加载更多，
+     * 如果不做额外判断，而用户连续快速上拉，则会出现多次请求
      */
     private boolean isLoadingMore;
 
@@ -31,8 +46,8 @@ public class LoadMoreRecyclerView extends RecyclerView {
         return isLoadingMore;
     }
 
-    public void setLoadingMore(boolean loadingMore) {
-        isLoadingMore = loadingMore;
+    public void completeLoadMore() {
+        isLoadingMore = false;
     }
 
     private LoadMoreListener mLoadMoreListener;
@@ -48,14 +63,24 @@ public class LoadMoreRecyclerView extends RecyclerView {
 
     public LoadMoreRecyclerView(@NonNull Context context) {
         super(context);
+        initView();
     }
 
     public LoadMoreRecyclerView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        initView();
     }
 
     public LoadMoreRecyclerView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        initView();
+    }
+
+    /**如果不取消动画，会导致数据不一致的报错
+     * IndexOutOfBoundsException: Inconsistency detected. Invalid view holder adapter
+     * */
+    private void initView(){
+        setItemAnimator(null);
     }
 
     private void init() {
@@ -75,19 +100,19 @@ public class LoadMoreRecyclerView extends RecyclerView {
                  * */
                 @Override
                 public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    if (isLoadMoreEnable && newState == RecyclerView.SCROLL_STATE_IDLE) {
 //                    LogT.i("停止滑动:");
                         int visibleItemCount = mLayoutManager.getChildCount();
                         int totalItemCount = mLayoutManager.getItemCount();
 //                        LogT.i(":" + getAdapter().getItemViewType(0));
-//                        LogT.i("visibleItemCount:" + visibleItemCount + ", totalItemCount:" + totalItemCount + ",lastVisibleItemPosition:" + lastVisibleItemPosition);
+//                        LogT.i("isLoadingMore:"+isLoadingMore + ",visibleItemCount:" + visibleItemCount + ", totalItemCount:" + totalItemCount + ",lastVisibleItemPosition:" + lastVisibleItemPosition);
                         if (!isLoadingMore && visibleItemCount < totalItemCount && lastVisibleItemPosition == totalItemCount - 1) {
                             isLoadingMore = true;
                             if (getAdapter() != null && getAdapter() instanceof BaseBindingAdapter) {
-//                                LogT.i("加载更多:");
-                                ((BaseBindingAdapter) getAdapter()).setLoadMoreEnable(true);
+                                LogT.i("加载更多:");
                                 ((BaseBindingAdapter) getAdapter()).showLoadMore(true);
                             }
+                            LogT.i("mLoadMoreListener:" + mLoadMoreListener);
                             if (mLoadMoreListener != null) {
                                 mLoadMoreListener.loadMore();
                             }
@@ -99,7 +124,9 @@ public class LoadMoreRecyclerView extends RecyclerView {
                 @Override
                 public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
 //                    LogT.i("dx:" +dx + ", dy:"  + dy);
-                    lastVisibleItemPosition = mLayoutManager.findLastVisibleItemPosition();
+                    if (isLoadMoreEnable) {
+                        lastVisibleItemPosition = mLayoutManager.findLastVisibleItemPosition();
+                    }
 
                 }
             });

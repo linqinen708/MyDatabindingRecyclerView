@@ -21,13 +21,14 @@ public class MyAdapter extends BaseBindingAdapter<MyBean, AdapterLayoutBinding> 
         super(context);
     }
 
+    /**头部HeaderView，如果没有，则不用重写方法*/
     @Override
     protected int getHeaderViewLayoutResId() {
         return R.layout.adapter_head_view_layout;
     }
 
     @Override
-    protected int getLayoutResId(int viewType) {
+    protected int getLayoutResId() {
         return R.layout.adapter_layout;
     }
 
@@ -42,8 +43,8 @@ public class MyAdapter extends BaseBindingAdapter<MyBean, AdapterLayoutBinding> 
             AdapterHeadViewLayoutBinding binding = DataBindingUtil.getBinding(holder.itemView);
             LogT.i("设置HeaderView");
             if (binding != null) {
-                binding.tvTime.setText("大家好，我是HeaderView");
-                binding.tvTime.getPaint().setFakeBoldText(true);
+                binding.tvHeaderView.setText("大家好，我是HeaderView");
+//                binding.tvTime.getPaint().setFakeBoldText(true);
             }
         }
     }

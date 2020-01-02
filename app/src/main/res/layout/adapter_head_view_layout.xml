@@ -10,12 +10,11 @@
         >
 
         <TextView
-            android:id="@+id/tv_time"
+            android:id="@+id/tv_header_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="5dp"
             android:gravity="center"
-            android:text="2019.12.26"
             android:textSize="12sp"
             tools:text="2019.03.05"
             />

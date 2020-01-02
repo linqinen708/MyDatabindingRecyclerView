@@ -18,7 +18,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 /**
  * 上拉加载参考资料  https://blog.csdn.net/weixin_37577039/article/details/79214663
  */
-public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+public class Main1Activity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
@@ -100,12 +100,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void initData() {
-        mAdapter.getItems().add(new MyBean("张三", 25, R.drawable.ic_launcher_foreground, true));
-        mAdapter.getItems().add(new MyBean("李四", 21, R.drawable.ic_launcher_background, true));
-        mAdapter.getItems().add(new MyBean("王五", 35, R.mipmap.ic_launcher, true));
-        mAdapter.getItems().add(new MyBean("赵六", 48, R.mipmap.ic_launcher_round, true));
-        mAdapter.getItems().add(new MyBean("横七", 48, R.mipmap.ic_launcher_round, true));
-//        mAdapter.getItems().add(new MyBean("竖八", 48, R.mipmap.ic_launcher_round, true));
+        mAdapter.getItems().add(new MyBean("谷歌1", 25, R.drawable.ic_launcher_foreground, true));
+        mAdapter.getItems().add(new MyBean("谷歌2", 21, R.drawable.ic_launcher_background, true));
+        mAdapter.getItems().add(new MyBean("谷歌3", 35, R.mipmap.ic_launcher, false));
+        mAdapter.getItems().add(new MyBean("谷歌4", 48, R.mipmap.ic_launcher_round, true));
+        mAdapter.getItems().add(new MyBean("谷歌5", 48, R.mipmap.ic_launcher_round, false));
 
     }
 
@@ -114,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mAdapter.clearData();
+                mAdapter.getItems().clear();
                 initData();
                 /*如果下拉刷新后，mRecyclerView 自动加载到底部，则让其返回到顶部*/
                 mRecyclerView.scrollToPosition(0);
@@ -132,12 +131,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (mAdapter.getItems().size() > 7) {
+                if (mAdapter.getItems().size() > 6) {
                     LogT.i("暂无数据:");
                     mAdapter.showLoadMore(false);
                 } else {
 //                    mAdapter.showFootView(false);
-                    mAdapter.getItems().add(new MyBean("谷歌" + mAdapter.getItems().size(), 9999, R.mipmap.ic_launcher_round, true));
+                    mAdapter.getItems().add(new MyBean("谷歌" + (mAdapter.getItems().size()+1), 9999, R.mipmap.ic_launcher_round, true));
                 }
                 isLoadingMore = false;
             }

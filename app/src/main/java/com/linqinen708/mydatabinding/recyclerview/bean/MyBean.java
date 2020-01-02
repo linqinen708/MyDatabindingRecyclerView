@@ -12,6 +12,7 @@ public class MyBean {
     /**头像*/
     private int avatar;
 
+    /**如果没被选中，年龄不显示*/
     private boolean isChecked;
 
     public MyBean(String name, int age, int avatar, boolean isChecked) {

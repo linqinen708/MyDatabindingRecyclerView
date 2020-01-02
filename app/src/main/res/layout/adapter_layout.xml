@@ -42,7 +42,6 @@
             android:layout_marginStart="10dp"
             android:text="@{`姓名：`+bean.name}"
             android:textSize="15sp"
-            android:visibility="@{viewModel.isVisible()}"
             app:layout_constraintStart_toEndOf="@id/iv_picture"
             app:layout_constraintTop_toTopOf="@id/iv_picture"
             tools:text="姓名：张三"
